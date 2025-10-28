@@ -1,0 +1,45 @@
+# app.yaml - Configuración para Google App Engine
+runtime: nodejs20
+
+instance_class: F1
+
+# Entrypoint explícito
+entrypoint: node dist/server.js
+
+# ⚠️ IMPORTANTE: Completa estas variables antes de desplegar
+env_variables:
+  NODE_ENV: "production"
+  PORT: "8080"
+  
+  # 🗄️ MongoDB Atlas - CONFIGURADO
+  MONGO_URI: "mongodb+srv://romancilloo:LoveProject2025@love.zwz732s.mongodb.net/love?retryWrites=true&w=majority"
+  
+  # 🔐 JWT Secret - Ya generado
+  JWT_SECRET: "822b52970ae18b199277d3d8b4738dc76f743fabdb44d0dc8a1e3ee17e12d787"
+  JWT_EXPIRATION: "12h"
+  
+  # 👤 Admin - Configura tus credenciales
+  ADMIN_EMAIL: "rxmyiscool69@gmail.com"
+  ADMIN_USERNAME: "admin"
+  ADMIN_PASSWORD: "190725"
+  
+  # 📦 Google Cloud Storage - Configuración del proyecto
+  GCS_PROJECT_ID: "love-api-prod"
+  GCS_BUCKET_NAME: "love-api-uploads"
+  # GCS_KEY_FILE no es necesario en producción (usa Application Default Credentials)
+
+# Escalado automático (optimizado para costos)
+automatic_scaling:
+  target_cpu_utilization: 0.65
+  min_instances: 0  # Se apaga cuando no hay tráfico = $0
+  max_instances: 5
+  min_idle_instances: automatic
+  max_idle_instances: automatic
+
+# Forzar HTTPS
+handlers:
+  - url: /.*
+    script: auto
+    secure: always
+    redirect_http_response_code: 301
+

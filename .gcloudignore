@@ -1,0 +1,28 @@
+# .gcloudignore - Archivos que NO se subirán a App Engine
+
+# Node modules (se instalarán en la nube)
+node_modules/
+
+# Git
+.git/
+.gitignore
+
+# Archivos de sistema
+.DS_Store
+*.log
+
+# Archivos locales
+.env
+.env.local
+.env.*.local
+tmp/
+dump/
+
+# Documentación
+README.md
+DEPLOY.md
+
+# Configuración local
+.vscode/
+.idea/
+

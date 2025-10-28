@@ -1,0 +1,48 @@
+{
+  "name": "love-api",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "tsx watch -r tsconfig-paths/register src/server.ts",
+    "dev:nodemon": "nodemon --watch src --ext ts --exec \"tsx src/server.ts\"",
+    "compile": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json",
+    "start": "node dist/src/server.js",
+    "format": "prettier --write \"{src,scripts}/**/*.ts\"",
+    "format:check": "prettier --check \"{src,scripts}/**/*.ts\"",
+    "seed": "tsx scripts/seed.ts",
+    "migrate:favorites": "tsx scripts/add-favorite-field.ts",
+    "deploy": "npm run compile && gcloud app deploy",
+    "deploy:no-promote": "npm run compile && gcloud app deploy --no-promote",
+    "logs": "gcloud app logs tail -s default",
+    "open": "gcloud app browse"
+  },
+  "dependencies": {
+    "@google-cloud/storage": "^7.17.2",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.19.2",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^7.6.3",
+    "multer": "^2.0.2",
+    "sharp": "^0.34.4",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.4.5",
+    "zod": "^3.23.8",
+    "heic-convert": "^1.2.1"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^20.11.30",
+    "nodemon": "^3.1.10",
+    "prettier": "^3.2.5",
+    "tsc-alias": "^1.8.16",
+    "tsx": "^4.7.0"
+  }
+}
