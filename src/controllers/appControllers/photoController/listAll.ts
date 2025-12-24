@@ -26,7 +26,8 @@ export const listAllPhotos = async (req: Request, res: Response) => {
       Photo.find(filters)
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(limit),
+        .limit(limit)
+        .populate('uploadedBy', 'displayName email username'),
       Photo.countDocuments(filters)
     ]);
 

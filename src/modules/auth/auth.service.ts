@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { env } from '../../config/env';
 import { ApiError } from '../../shared/errors/api-error';
 import { AuthResponse, AuthTokenPayload, AuthUser } from './auth.types';
-import { userService } from '../users/user.service';
+import { User } from '@/models/coreModels/User';
 
 const ADMIN_SUBJECT = 'love-admin';
 
@@ -12,7 +12,9 @@ class AuthService {
     const trimmedPassword = password.trim();
     const normalizedIdentifier = identifier.trim().toLowerCase();
 
-    const storedUser = await userService.findByIdentifier(normalizedIdentifier);
+    const storedUser = await User.findOne({
+      $or: [{ email: normalizedIdentifier }, { username: normalizedIdentifier }]
+    });
     const fallbackEmail = env.ADMIN_EMAIL.toLowerCase();
     const fallbackUsername = env.ADMIN_USERNAME.toLowerCase();
 
@@ -25,7 +27,7 @@ class AuthService {
         id: storedUser.id,
         email: storedUser.email ?? fallbackEmail,
         username: storedUser.username ?? fallbackUsername,
-        role: 'admin'
+        role: storedUser.role ?? 'user'
       };
     }
 
@@ -43,12 +45,12 @@ class AuthService {
       return null;
     }
 
-    return {
-      id: ADMIN_SUBJECT,
-      email: fallbackEmail,
-      username: fallbackUsername,
-      role: 'admin'
-    };
+      return {
+        id: ADMIN_SUBJECT,
+        email: fallbackEmail,
+        username: fallbackUsername,
+        role: 'superadmin'
+      };
   }
 
   private generateToken(user: AuthUser): string {
@@ -91,7 +93,7 @@ class AuthService {
 
       return {
         id: payload.sub,
-        role: payload.role ?? 'admin',
+        role: payload.role ?? 'user',
         email: payload.email ?? env.ADMIN_EMAIL,
         username: payload.username ?? env.ADMIN_USERNAME
       };

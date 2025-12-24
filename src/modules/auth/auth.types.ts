@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { UserRole } from '@/models/coreModels/User';
 
 export const loginSchema = z.object({
   identifier: z.string().trim().min(1, 'Email o usuario es requerido'),
@@ -11,7 +12,7 @@ export interface AuthUser {
   id: string;
   email: string;
   username: string;
-  role: 'admin';
+  role: UserRole;
 }
 
 export interface AuthTokenPayload {

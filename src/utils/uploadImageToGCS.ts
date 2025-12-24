@@ -37,6 +37,9 @@ export async function uploadImageToGCS(file: any, folder?: string): Promise<stri
   const blobStream = blob.createWriteStream({
     resumable: false,
     contentType: file.mimetype,
+    metadata: {
+      cacheControl: 'public, max-age=31536000', // 1 year cache
+    },
   });
 
   return new Promise((resolve, reject) => {

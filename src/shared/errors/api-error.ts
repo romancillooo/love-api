@@ -16,3 +16,5 @@ export const createNotFoundError = (message = 'Resource not found') =>
 export const createUnauthorizedError = (message = 'Unauthorized') =>
   new ApiError(401, message);
 
+export const createForbiddenError = (message = 'Forbidden') =>
+  new ApiError(403, message);

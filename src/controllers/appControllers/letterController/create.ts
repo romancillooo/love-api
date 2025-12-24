@@ -1,6 +1,8 @@
 // src/controllers/appController/letterController/create.ts
 import { Request, Response } from 'express';
+import { Types } from 'mongoose';
 import { Letter } from '../../../models/appModels/Letter';
+import { User } from '../../../models/coreModels/User';
 
 /**
  * POST /api/letters
@@ -26,11 +28,30 @@ export const createLetter = async (req: Request, res: Response) => {
       });
     }
 
+    const bodyUserId = typeof req.body?.userId === 'string' ? req.body.userId.trim() : undefined;
+    const creatorId =
+      (req.user?.id && Types.ObjectId.isValid(req.user.id) ? req.user.id : undefined) || bodyUserId;
+
+    if (!creatorId) {
+      return res.status(400).json({
+        error: 'userId is required to create a letter'
+      });
+    }
+
+    const creator = await User.findById(creatorId);
+
+    if (!creator) {
+      return res.status(404).json({
+        error: 'Creator user not found'
+      });
+    }
+
     // 3️⃣ Crear el documento
     const letterData: any = {
       title: title.trim(),
       icon: icon.trim(),
-      content: content.trim()
+      content: content.trim(),
+      createdBy: creator._id
     };
 
     // Agregar ID si se proporciona (opcional)
@@ -51,6 +72,7 @@ export const createLetter = async (req: Request, res: Response) => {
 
     // 4️⃣ Guardar en la base de datos
     const letter = await Letter.create(letterData);
+    await letter.populate('createdBy', 'displayName email username');
 
     // 5️⃣ Responder con la carta creada
     res.status(201).json({
@@ -72,4 +94,3 @@ export const createLetter = async (req: Request, res: Response) => {
     });
   }
 };
-

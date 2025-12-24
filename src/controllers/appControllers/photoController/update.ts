@@ -24,6 +24,7 @@ export const updatePhoto = async (req: Request, res: Response) => {
 
     // 3️⃣ Guardar cambios
     await photo.save();
+    await photo.populate('uploadedBy', 'displayName email username');
 
     // 4️⃣ Responder
     res.status(200).json({
@@ -37,4 +38,3 @@ export const updatePhoto = async (req: Request, res: Response) => {
     });
   }
 };
-

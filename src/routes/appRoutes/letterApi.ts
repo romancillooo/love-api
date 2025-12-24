@@ -1,6 +1,13 @@
 // src/routes/appRoutes/letterApi.ts
 import express from 'express';
-import { listAllLetters, createLetter } from '@/controllers/appControllers/letterController';
+import {
+  listAllLetters,
+  createLetter,
+  updateLetter,
+  deleteLetter
+} from '@/controllers/appControllers/letterController';
+import { authenticate } from '@/shared/middlewares/auth.middleware';
+import { requireSuperAdmin } from '@/shared/middlewares/role.middleware';
 
 const router = express.Router();
 
@@ -14,7 +21,8 @@ router.get('/', listAllLetters);
  * ✍️ POST /api/letters
  * Crea una nueva carta (para uso desde Postman)
  */
-router.post('/', createLetter);
+router.post('/', authenticate, requireSuperAdmin, createLetter);
+router.patch('/:id', authenticate, requireSuperAdmin, updateLetter);
+router.delete('/:id', authenticate, requireSuperAdmin, deleteLetter);
 
 export default router;
-

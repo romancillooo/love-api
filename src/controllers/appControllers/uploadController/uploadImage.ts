@@ -1,7 +1,9 @@
 // src/controllers/appControllers/uploadController/uploadImage.ts
 import { Request, Response } from 'express';
+import { Types } from 'mongoose';
 import { uploadImageToGCS } from '@/utils/uploadImageToGCS';
 import { Photo } from '../../../models/appModels/Photo';
+import { User } from '../../../models/coreModels/User';
 import sharp from 'sharp';
 import path from 'path';
 
@@ -19,6 +21,19 @@ export const uploadImages = async (req: Request, res: Response) => {
 
     const folder = (req.query.folder as string) || 'photos';
     const results = [];
+    
+    // userId es opcional - si se proporciona, lo validamos y usamos
+    const bodyUserId = typeof req.body?.userId === 'string' ? req.body.userId.trim() : undefined;
+    const candidateUserId =
+      (req.user?.id && Types.ObjectId.isValid(req.user.id) ? req.user.id : undefined) || bodyUserId;
+
+    let uploader = null;
+    if (candidateUserId) {
+      uploader = await User.findById(candidateUserId);
+      if (!uploader) {
+        return res.status(404).json({ error: 'Uploader user not found' });
+      }
+    }
 
 
     for (const file of files) {
@@ -30,13 +45,26 @@ export const uploadImages = async (req: Request, res: Response) => {
       if (originalExt === '.heic' || originalExt === '.heif') {
         try {
           const { default: heicConvert } = await import('heic-convert');
-          processedBuffer = await heicConvert({
+          // 1. Convert HEX to temporary buffer (PNG is usually safer intermediate)
+          const pngBuffer = await heicConvert({
             buffer: file.buffer,
             format: 'PNG',
             quality: 1,
           });
-          outputMime = 'image/png';
-          outputExt = '.png';
+
+          // 2. Process with Sharp: Resize & Convert to WebP
+          processedBuffer = await sharp(pngBuffer)
+            .resize({
+              width: 1920,
+              height: 1920,
+              fit: 'inside', // Maintain aspect ratio, do not crop
+              withoutEnlargement: true, // Do not upscale integers smaller than 1920
+            })
+            .webp({ quality: 80 })
+            .toBuffer();
+
+          outputMime = 'image/webp';
+          outputExt = '.webp';
         } catch (heicError) {
           console.warn('⚠️ Unable to convert HEIC/HEIF image, keeping original buffer:', heicError);
           processedBuffer = file.buffer;
@@ -46,7 +74,17 @@ export const uploadImages = async (req: Request, res: Response) => {
       } else {
         try {
           const basePipeline = sharp(file.buffer).rotate();
-          processedBuffer = await basePipeline.webp({ quality: 85 }).toBuffer();
+          
+          processedBuffer = await basePipeline
+            .resize({
+              width: 1920,
+              height: 1920,
+              fit: 'inside',
+              withoutEnlargement: true,
+            })
+            .webp({ quality: 80 })
+            .toBuffer();
+
           outputMime = 'image/webp';
           outputExt = '.webp';
         } catch (conversionError) {
@@ -70,13 +108,25 @@ export const uploadImages = async (req: Request, res: Response) => {
       const imageUrl = await uploadImageToGCS(file, folder);
 
       // 🔹 Guardar en MongoDB
-      const photo = await Photo.create({
+      const photoData: any = {
         url: imageUrl,
         format: outputMime.split('/')[1] || outputExt.replace('.', '') || 'binary',
         folder,
         originalName: file.originalname,
         size: file.size,
-      });
+      };
+
+      // Solo agregar uploadedBy si existe un usuario
+      if (uploader) {
+        photoData.uploadedBy = uploader._id;
+      }
+
+      const photo = await Photo.create(photoData);
+
+      // Solo hacer populate si hay uploadedBy
+      if (uploader) {
+        await photo.populate('uploadedBy', 'displayName email username');
+      }
 
       results.push(photo);
     }

@@ -9,6 +9,7 @@ const PhotoSchema = new Schema({
   originalName: { type: String },
   size: { type: Number },
   isFavorite: { type: Boolean, default: false },
+  uploadedBy: { type: Schema.Types.ObjectId, ref: 'User' },
 });
 
 export const Photo = model('Photo', PhotoSchema);

@@ -8,6 +8,7 @@ const LetterSchema = new Schema({
   content: { type: String, required: true },
   publishedAt: { type: Date },
   createdAt: { type: Date, default: Date.now },
+  createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
 });
 
 // Índices para mejorar las consultas
@@ -15,4 +16,3 @@ LetterSchema.index({ createdAt: -1 });
 LetterSchema.index({ publishedAt: -1 });
 
 export const Letter = model('Letter', LetterSchema);
-
