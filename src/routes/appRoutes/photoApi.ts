@@ -1,6 +1,6 @@
 // src/routes/appRoutes/photoApi.ts
 import express from 'express';
-import { listAllPhotos, deletePhoto, updatePhoto, downloadPhoto } from '@/controllers/appControllers/photoController';
+import { listAllPhotos, deletePhoto, updatePhoto, downloadPhoto, batchDeletePhotos } from '@/controllers/appControllers/photoController';
 
 const router = express.Router();
 
@@ -27,5 +27,12 @@ router.patch('/:id', updatePhoto);
  * Elimina una foto del bucket y de la base de datos
  */
 router.delete('/:id', deletePhoto);
+
+/**
+ * 🗑️💥 POST /api/photos/batch-delete
+ * Elimina múltiples fotos enviando un array de IDs
+ * Body: { ids: ["id1", "id2"] }
+ */
+router.post('/batch-delete', batchDeletePhotos);
 
 export default router;

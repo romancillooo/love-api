@@ -8,3 +8,6 @@ dump
 coverage
 
 src/config/google-service-account.json
+
+# Ignore data folder with secrets
+data/

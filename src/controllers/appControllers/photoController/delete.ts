@@ -43,7 +43,11 @@ export const deletePhoto = async (req: Request, res: Response) => {
     const file = bucket.file(filePath);
 
     // 4️⃣ Eliminar del bucket
-    await file.delete({ ignoreNotFound: true });
+    try {
+      await file.delete({ ignoreNotFound: true });
+    } catch (gcsError: any) {
+      console.warn(`⚠️ Warning: Could not delete file from GCS (${bucketName}). It might not exist or access is denied. Proceeding to delete metadata. Error: ${gcsError.message}`);
+    }
 
     // 5️⃣ Eliminar de la base de datos
     await photo.deleteOne();

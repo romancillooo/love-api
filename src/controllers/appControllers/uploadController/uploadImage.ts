@@ -6,6 +6,7 @@ import { Photo } from '../../../models/appModels/Photo';
 import { User } from '../../../models/coreModels/User';
 import sharp from 'sharp';
 import path from 'path';
+import exifReader from 'exif-reader';
 
 /**
  * Sube múltiples imágenes al bucket de Google Cloud Storage,
@@ -36,11 +37,59 @@ export const uploadImages = async (req: Request, res: Response) => {
     }
 
 
-    for (const file of files) {
+    // Parsear fechas manuales enviadas desde el frontend (si las hay)
+    let manualDates: string[] = [];
+    if (req.body.creationDates) {
+        if (Array.isArray(req.body.creationDates)) {
+            manualDates = req.body.creationDates.map((d: any) => String(d));
+        } else {
+            manualDates = [String(req.body.creationDates)];
+        }
+    }
+
+    // Iterar con índice para emparejar fechas manuales
+    // 'files' es Express.Multer.File[]
+    // files.entries() devuelve un IterableIterator<[number, Express.Multer.File]>
+    for (const [index, file] of Array.from(files.entries())) {
       const originalExt = path.extname(file.originalname).toLowerCase();
       let processedBuffer = file.buffer;
       let outputMime = 'image/webp';
       let outputExt = '.webp';
+      
+      // 🕵️‍♂️ 1. Intentar validar fecha manual enviada por Frontend (Prioridad 1)
+      let originalCreationDate: Date | undefined;
+      const manualDateStr = manualDates[index];
+      
+      if (manualDateStr) {
+        const d = new Date(manualDateStr);
+        if (!isNaN(d.getTime())) {
+            originalCreationDate = d;
+        }
+      }
+
+      // 🕵️‍♂️ 2. Si no hay fecha manual, intentar extraer EXIF (Prioridad 2)
+      if (!originalCreationDate) {
+          try {
+            const metadata = await sharp(file.buffer).metadata();
+            if (metadata.exif) {
+              const parsedExif: any = exifReader(metadata.exif);
+              // Buscar en diferentes campos comunes de fecha
+              const dateString = parsedExif.exif?.DateTimeOriginal || parsedExif.image?.ModifyDate || parsedExif.image?.DateTime;
+              
+              if (dateString) {
+                 // El formato EXIF suele ser "YYYY:MM:DD HH:MM:SS"
+                 const validDateString = dateString.toString().substring(0, 10).replace(/:/g, '-') + dateString.toString().substring(10);
+                const d = new Date(validDateString);
+                
+                if (!isNaN(d.getTime())) {
+                    originalCreationDate = d;
+                }
+              }
+            }
+          } catch (exifError) {
+            console.warn('⚠️ Could not extract EXIF data:', exifError);
+          }
+      }
 
       if (originalExt === '.heic' || originalExt === '.heif') {
         try {
@@ -115,6 +164,11 @@ export const uploadImages = async (req: Request, res: Response) => {
         originalName: file.originalname,
         size: file.size,
       };
+
+      // Si encontramos fecha original, la usamos. Si no, Mongo usará default: Date.now
+      if (originalCreationDate) {
+        photoData.createdAt = originalCreationDate;
+      }
 
       // Solo agregar uploadedBy si existe un usuario
       if (uploader) {
