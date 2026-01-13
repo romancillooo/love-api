@@ -22,7 +22,7 @@ router.get('/', listAllLetters);
  * Crea una nueva carta (cualquier usuario autenticado)
  */
 router.post('/', authenticate, createLetter);
-router.patch('/:id', authenticate, requireSuperAdmin, updateLetter);
-router.delete('/:id', authenticate, requireSuperAdmin, deleteLetter);
+router.patch('/:id', authenticate, updateLetter);
+router.delete('/:id', authenticate, deleteLetter);
 
 export default router;

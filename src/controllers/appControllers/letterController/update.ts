@@ -5,12 +5,19 @@ import { Letter } from '../../../models/appModels/Letter';
 
 /**
  * PATCH /api/letters/:id
- * Actualiza una carta utilizando el id numérico o el _id de Mongo.
+ * Actualiza una carta. Solo el creador de la carta o un superadmin puede editarla.
  * Body: { title?, icon?, content?, publishedAt?, id? }
  */
 export const updateLetter = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const currentUser = req.user;
+
+    if (!currentUser) {
+      return res.status(401).json({
+        error: 'Usuario no autenticado'
+      });
+    }
 
     if (!id) {
       return res.status(400).json({
@@ -32,6 +39,26 @@ export const updateLetter = async (req: Request, res: Response) => {
     if (filters.length === 0) {
       return res.status(400).json({
         error: 'Invalid letter id format'
+      });
+    }
+
+    // Primero buscamos la carta para verificar permisos
+    const query = filters.length === 1 ? filters[0] : { $or: filters };
+    const existingLetter = await Letter.findOne(query);
+
+    if (!existingLetter) {
+      return res.status(404).json({
+        error: 'Letter not found'
+      });
+    }
+
+    // 🔐 Verificar permisos: solo el creador o superadmin puede editar
+    const isOwner = existingLetter.createdBy && existingLetter.createdBy.toString() === currentUser.id;
+    const isSuperAdmin = currentUser.role === 'superadmin';
+
+    if (!isOwner && !isSuperAdmin) {
+      return res.status(403).json({
+        error: 'No tienes permiso para editar esta carta. Solo el creador puede editarla.'
       });
     }
 
@@ -91,21 +118,13 @@ export const updateLetter = async (req: Request, res: Response) => {
       });
     }
 
-    const query =
-      filters.length === 1 ? filters[0] : { $or: filters };
-
+    // Ahora sí actualizamos
     const letter = await Letter.findOneAndUpdate(query, updateData, {
       new: true,
       runValidators: true
     });
 
-    if (!letter) {
-      return res.status(404).json({
-        error: 'Letter not found'
-      });
-    }
-
-    await letter.populate('createdBy', 'displayName email username');
+    await letter!.populate('createdBy', 'displayName email username role');
 
     res.status(200).json({
       message: 'Letter updated successfully',
