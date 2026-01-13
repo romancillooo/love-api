@@ -31,7 +31,7 @@ export const listAllLetters = async (req: Request, res: Response) => {
         .sort({ publishedAt: -1, createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .populate('createdBy', 'displayName email username')
+        .populate('createdBy', 'displayName email username role')
         .lean(), // Mejora el performance
       Letter.countDocuments(filters)
     ]);

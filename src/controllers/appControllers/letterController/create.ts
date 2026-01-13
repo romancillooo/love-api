@@ -72,7 +72,7 @@ export const createLetter = async (req: Request, res: Response) => {
 
     // 4️⃣ Guardar en la base de datos
     const letter = await Letter.create(letterData);
-    await letter.populate('createdBy', 'displayName email username');
+    await letter.populate('createdBy', 'displayName email username role');
 
     // 5️⃣ Responder con la carta creada
     res.status(201).json({

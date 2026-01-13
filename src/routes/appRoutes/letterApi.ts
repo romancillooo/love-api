@@ -19,9 +19,9 @@ router.get('/', listAllLetters);
 
 /**
  * ✍️ POST /api/letters
- * Crea una nueva carta (para uso desde Postman)
+ * Crea una nueva carta (cualquier usuario autenticado)
  */
-router.post('/', authenticate, requireSuperAdmin, createLetter);
+router.post('/', authenticate, createLetter);
 router.patch('/:id', authenticate, requireSuperAdmin, updateLetter);
 router.delete('/:id', authenticate, requireSuperAdmin, deleteLetter);
 
