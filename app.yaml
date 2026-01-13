@@ -31,7 +31,7 @@ env_variables:
 # Escalado automático (optimizado para costos)
 automatic_scaling:
   target_cpu_utilization: 0.65
-  min_instances: 0  # Se apaga cuando no hay tráfico = $0
+  min_instances: 1  # Mantener 1 siempre encendida para evitar cold starts
   max_instances: 5
   min_idle_instances: automatic
   max_idle_instances: automatic

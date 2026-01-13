@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { connectDatabase, disconnectDatabase } from '../src/config/database';
 import { env } from '../src/config/env';
 import { PhotoModel } from '../src/modules/photos/photo.model';
-import { LetterModel } from '../src/modules/letters/letter.model';
+import { Letter } from '../src/models/appModels/Letter';
 import { logger } from '../src/shared/utils/logger';
 
 const dataDir = path.resolve(__dirname, '..', 'data');
@@ -55,8 +55,8 @@ async function seedPhotos() {
 
 async function seedLetters() {
   const letters = await loadJson<LetterSeed[]>('letters.json');
-  await LetterModel.deleteMany({});
-  await LetterModel.insertMany(
+  await Letter.deleteMany({});
+  await Letter.insertMany(
     letters.map(letter => ({
       title: letter.title,
       icon: letter.icon,
