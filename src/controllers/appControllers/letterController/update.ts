@@ -67,6 +67,7 @@ export const updateLetter = async (req: Request, res: Response) => {
 
     if (title !== undefined) {
       if (typeof title !== 'string' || title.trim() === '') {
+        console.log('❌ Update Error: Title invalid', title);
         return res.status(400).json({
           error: 'Title cannot be empty'
         });
@@ -76,6 +77,7 @@ export const updateLetter = async (req: Request, res: Response) => {
 
     if (icon !== undefined) {
       if (typeof icon !== 'string' || icon.trim() === '') {
+        console.log('❌ Update Error: Icon invalid', icon);
         return res.status(400).json({
           error: 'Icon cannot be empty'
         });
@@ -85,6 +87,7 @@ export const updateLetter = async (req: Request, res: Response) => {
 
     if (content !== undefined) {
       if (typeof content !== 'string' || content.trim() === '') {
+        console.log('❌ Update Error: Content invalid', content);
         return res.status(400).json({
           error: 'Content cannot be empty'
         });
@@ -93,18 +96,22 @@ export const updateLetter = async (req: Request, res: Response) => {
     }
 
     if (newId !== undefined) {
-      const parsedId = Number(newId);
-      if (Number.isNaN(parsedId)) {
-        return res.status(400).json({
-          error: 'id must be a valid number'
-        });
+      // Si el id enviado es igual al id de la URL, lo ignoramos (es redundante)
+      if (newId.toString() === id) {
+        // No hacer nada
+      } else {
+        const parsedId = Number(newId);
+        // Solo intentamos actualizar si es un número válido. Si es un string (ObjectId), lo ignoramos.
+        if (!Number.isNaN(parsedId)) {
+          updateData.id = parsedId;
+        }
       }
-      updateData.id = parsedId;
     }
 
     if (publishedAt !== undefined) {
       const date = new Date(publishedAt);
       if (Number.isNaN(date.getTime())) {
+        console.log('❌ Update Error: publishedAt invalid', publishedAt);
         return res.status(400).json({
           error: 'Invalid publishedAt date format'
         });
@@ -113,6 +120,7 @@ export const updateLetter = async (req: Request, res: Response) => {
     }
 
     if (Object.keys(updateData).length === 0) {
+      console.log('❌ Update Error: No valid fields to update. Body:', req.body);
       return res.status(400).json({
         error: 'At least one field is required to update'
       });
