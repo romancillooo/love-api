@@ -4,7 +4,8 @@ import {
   listAllLetters,
   createLetter,
   updateLetter,
-  deleteLetter
+  deleteLetter,
+  reactToLetter
 } from '@/controllers/appControllers/letterController';
 import { authenticate } from '@/shared/middlewares/auth.middleware';
 import { requireSuperAdmin } from '@/shared/middlewares/role.middleware';
@@ -24,5 +25,14 @@ router.get('/', listAllLetters);
 router.post('/', authenticate, createLetter);
 router.patch('/:id', authenticate, updateLetter);
 router.delete('/:id', authenticate, deleteLetter);
+
+/**
+ * 💕 POST /api/letters/:id/react
+ * Agrega, cambia o elimina una reacción a una carta
+ * - Si el usuario NO tiene reacción → Agregar nueva reacción
+ * - Si el usuario YA tiene reacción con OTRO emoji → Reemplazar
+ * - Si el usuario YA tiene reacción con el MISMO emoji → Eliminar (toggle)
+ */
+router.post('/:id/react', authenticate, reactToLetter);
 
 export default router;

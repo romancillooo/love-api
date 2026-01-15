@@ -32,6 +32,7 @@ export const listAllLetters = async (req: Request, res: Response) => {
         .skip(skip)
         .limit(limit)
         .populate('createdBy', 'displayName email username role')
+        .populate('reactions.user', 'username displayName')
         .lean(), // Mejora el performance
       Letter.countDocuments(filters)
     ]);

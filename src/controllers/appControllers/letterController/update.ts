@@ -133,6 +133,7 @@ export const updateLetter = async (req: Request, res: Response) => {
     });
 
     await letter!.populate('createdBy', 'displayName email username role');
+    await letter!.populate('reactions.user', 'username displayName');
 
     res.status(200).json({
       message: 'Letter updated successfully',
